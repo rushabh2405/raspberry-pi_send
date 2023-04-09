@@ -55,7 +55,7 @@ def main():
                         data["Temperature"]=str(dhtDevice.temperature)+" C /"+str(round(dhtDevice.temperature*(9/5)+32))+" F"
                         data["Humidity"]=str(dhtDevice.humidity)+" %"
                         data["Timestamp"]=str(round(time.time()))
-                        data["Version"]="version-1"
+                        data["Version"]="version-2"
                 except RuntimeError as error:
                         print(error.args[0])
                         print("dht error")
