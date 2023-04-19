@@ -4,6 +4,8 @@ import adafruit_dht
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import json
 import mysql.connector
+import time
+import requests
 
 def mqtt_connect():
         try:
@@ -44,27 +46,42 @@ def connect_to_mysql(db,temp,hum,ts,ver):
                 print("failed to connect to database:{}".format(error))
                 exit()
 
-def main():
-        dhtDevice = adafruit_dht.DHT11(board.D4)
-        db =mysql.connector.connect(host="database-1.cap0bv0hngpg.ap-south-1.rds.amazonaws.com",user="database_1",password="mydatabase",database="database_1")
-        myMQTTClient=mqtt_connect()
+def check_internet():
+    try:
+        response = requests.get("https://www.google.com", timeout=5)
+        response.raise_for_status()
+        return True
+    except:
+        return False
+
+def main(flag):
+        dhtDevice = adafruit_dht.DHT11(board.D17)
         data = {"Sr_no":0, "Temperature" : 0,"Humidity":0,"Timestamp":0,"Version":0}
         while(True):
-                try:
-                        data["Sr_no"]=data["Sr_no"]+1
-                        data["Temperature"]=str(dhtDevice.temperature)+" C /"+str(round(dhtDevice.temperature*(9/5)+32))+" F"
-                        data["Humidity"]=str(dhtDevice.humidity)+" %"
-                        data["Timestamp"]=str(round(time.time()))
-                        data["Version"]="Rushabh"
-                except RuntimeError as error:
-                        print(error.args[0])
-                        print("dht error")
+                if(flag==1 and check_internet()== True):
+                        db =mysql.connector.connect(host="database-1.cap0bv0hngpg.ap-south-1.rds.amazonaws.com",user="database_1",password="mydatabase",database="database_1")
+                        myMQTTClient=mqtt_connect()
+        
+                if(check_internet()== True):
+                        try:
+                                data["Sr_no"]=data["Sr_no"]+1
+                                data["Temperature"]=str(dhtDevice.temperature)+" C /"+str(round(dhtDevice.temperature*(9/5)+32))+" F"
+                                data["Humidity"]=str(dhtDevice.humidity)+" %"
+                                data["Timestamp"]=str(round(time.time()))
+                                data["Version"]="Rushabh"
+                        except RuntimeError as error:
+                                print(error.args[0])
+                                print("dht error")
                
-                data_temp = json.dumps(data)
-                
-                myMQTTClient.publish(topic="myTopic",QoS=1,payload=data_temp)
-                connect_to_mysql(db,data["Temperature"],data["Humidity"],data["Timestamp"],data["Version"])
-                time.sleep(10)
-                
+                        data_temp = json.dumps(data)
+        
+                        myMQTTClient.publish(topic="myTopic",QoS=1,payload=data_temp)
+                        connect_to_mysql(db,data["Temperature"],data["Humidity"],data["Timestamp"],data["Version"])
+                        time.sleep(10)
+                        flag=0
+                else:
+                        print("internet not available")
+                        flag=1
 if __name__=="__main__":
-        main()
+        flag=1
+        main(flag)
