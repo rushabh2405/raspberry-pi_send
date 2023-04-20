@@ -133,7 +133,7 @@ def main(flag):
                                 data_aws["Temperature"]=str(dhtDevice.temperature)+" C /"+str(round(dhtDevice.temperature*(9/5)+32))+" F"
                                 data_aws["Humidity"]=str(dhtDevice.humidity)+" %"
                                 data_aws["Timestamp"]=str(round(time.time()))
-                                data_aws["Version"]="Rushabh"
+                                data_aws["Version"]="version-1"
                         except RuntimeError as error:
                                 print(error.args[0])
                                 print("dht error")
